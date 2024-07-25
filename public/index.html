@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="auth-container">
+      <h2>Register</h2>
+      <input type="text" id="reg-username" placeholder="Username">
+      <input type="text" id="reg-email" placeholder="Email">
+      <input type="password" id="reg-password" placeholder="Password">
+      <button onclick="register()">Register</button>
+    </div>
+
+    <div class="auth-container">
+      <h2>Login</h2>
+      <input type="text" id="login-email" placeholder="Email">
+      <input type="password" id="login-password" placeholder="Password">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="chat" class="chat-container" style="display:none;">
+      <div class="chat-header">
+        <h2>Chat</h2>
+      </div>
+      <div id="messages" class="chat-messages"></div>
+      <div class="chat-input">
+        <input type="text" id="message" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let socket;
+
+    function register() {
+      const username = document.getElementById('reg-username').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+
+      fetch('http://localhost:3000/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, email, password })
+      }).then(response => response.text()).then(data => {
+        alert(data);
+      });
+    }
+
+    function login() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      }).then(response => response.json()).then(data => {
+        const token = data.token;
+        socket = new WebSocket('ws://localhost:3000', token);
+
+        socket.onopen = () => {
+          document.querySelector('.auth-container').style.display = 'none';
+          document.getElementById('chat').style.display = 'flex';
+        };
+
+        socket.onmessage = (event) => {
+          const messageData = JSON.parse(event.data);
+          const messageElement = document.createElement('div');
+          messageElement.className = 'message';
+          messageElement.innerHTML = `<strong>${messageData.username}</strong>: ${messageData.message} <span>${new Date(messageData.timestamp).toLocaleTimeString()}</span>`;
+          document.getElementById('messages').appendChild(messageElement);
+          document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        };
+      });
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('message').value;
+      socket.send(message);
+      document.getElementById('message').value = '';
+    }
+  </script>
+</body>
+</html>
