@@ -14,5 +14,4 @@
 
 ```http://192.168.1.3:8080```
 
-# it will open to the browser. Then you will register yourself and only then login with the 
-# same email and password. now you can send message whichever you want
+# it will open to the browser. Then you will register yourself and only then login with the same email and password. now you can send message whichever you want
